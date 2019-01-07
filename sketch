@@ -1,0 +1,66 @@
+#include "U8glib.h"
+#include "RTClib.h"
+#include <Adafruit_Sensor.h>
+#include <Adafruit_AM2320.h>
+
+Adafruit_AM2320 am2320 = Adafruit_AM2320();
+U8GLIB_SH1106_128X64 u8g(U8G_I2C_OPT_NONE);
+
+RTC_DS1307 rtc;
+char daysOfTheWeek[7][12] = {"Sunnuntai", "Maanantai", "Tiistai", "Keskiviikko", "Torstai", "Perjantai", "Lauantai"};
+
+
+void setup ()
+{
+  am2320.begin();
+  if (! rtc.isrunning()) {
+    // following line sets the RTC to the date & time this sketch was compiled
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    // This line sets the RTC with an explicit date & time, for example to set
+    // January 21, 2014 at 3am you would call:
+    // rtc.adjust(DateTime(2000, 12, 21, 13, 3, 0));
+  }
+
+}
+
+void draw() {
+  u8g.setFont(u8g_font_fub35n);
+  u8g.setPrintPos(0, 37);
+  DateTime now = rtc.now();
+  if (now.hour() < 10)
+  {
+    u8g.setPrintPos(28, 37);
+  }
+  u8g.print(now.hour(), DEC);
+  u8g.print(':');
+  if (now.minute() < 10)
+  {
+    u8g.print("0");
+  }
+  u8g.print(now.minute(), DEC);
+  u8g.setFont(u8g_font_5x7r);
+  u8g.setPrintPos(0, 53);
+  u8g.print(now.day(), DEC);
+  u8g.print('.');
+  u8g.print(now.month(), DEC);
+  u8g.print('.');
+  u8g.print(now.year(), DEC);
+  u8g.print(" ");
+  u8g.println(daysOfTheWeek[now.dayOfTheWeek()]);
+  u8g.setPrintPos(0, 60);
+  u8g.print("Temp: ");
+  u8g.print(am2320.readTemperature());
+  u8g.print(" C");
+  u8g.print(" Hum: ");
+  u8g.print(am2320.readHumidity());
+
+}
+
+
+void loop() {
+  u8g.firstPage();
+  do {
+    draw();
+  } while ( u8g.nextPage() );
+  delay(1000);
+}
